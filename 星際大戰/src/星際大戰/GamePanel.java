@@ -2,20 +2,18 @@ package 星際大戰;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.*;
 import java.util.ArrayList;
 
-public class GamePanel extends JPanel implements KeyListener, Runnable {
+public class GamePanel extends JPanel implements MouseMotionListener, MouseListener, Runnable {
     private int playerX = 400, playerY = 500; // 玩家飛船位置
-    private int playerSpeed = 10; // 玩家移動速度
     private ArrayList<Enemy> enemies; // 敵人列表
     private ArrayList<Laser> lasers; // 雷射列表
     private int score = 0; // 分數
     private int level = 1; // 關卡
     private int health = 100; // 生命值（初始100）
     private boolean running = true;
-    private boolean canShoot = true; // 控制射擊冷卻
+    private boolean isShooting = false; // 追蹤是否正在射擊
     private long lastShootTime = 0; // 上次射擊的時間
     private final long shootCooldown = 200; // 射擊冷卻時間（毫秒）
 
@@ -23,7 +21,8 @@ public class GamePanel extends JPanel implements KeyListener, Runnable {
         enemies = new ArrayList<>();
         lasers = new ArrayList<>();
         setFocusable(true);
-        addKeyListener(this);
+        addMouseMotionListener(this);
+        addMouseListener(this);
         new Thread(this).start(); // 啟動遊戲主循環
     }
 
@@ -116,6 +115,15 @@ public class GamePanel extends JPanel implements KeyListener, Runnable {
                 }
             }
 
+            // 按住滑鼠左鍵時連續射擊
+            if (isShooting) {
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - lastShootTime >= shootCooldown) {
+                    lasers.add(new Laser(playerX, playerY - 10)); // 發射雷射
+                    lastShootTime = currentTime;
+                }
+            }
+
             repaint();
             try {
                 Thread.sleep(16); // 約60 FPS
@@ -127,26 +135,45 @@ public class GamePanel extends JPanel implements KeyListener, Runnable {
         System.exit(0);
     }
 
+    // 當滑鼠移動時（未按住左鍵），更新飛船位置
     @Override
-    public void keyPressed(KeyEvent e) {
-        int key = e.getKeyCode();
-        if (key == KeyEvent.VK_LEFT && playerX > 40) {
-            playerX -= playerSpeed;
-        }
-        if (key == KeyEvent.VK_RIGHT && playerX < getWidth() - 40) {
-            playerX += playerSpeed;
-        }
-        if (key == KeyEvent.VK_SPACE) {
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastShootTime >= shootCooldown) {
-                lasers.add(new Laser(playerX, playerY - 10)); // 按空格鍵發射雷射
-                lastShootTime = currentTime;
-            }
+    public void mouseMoved(MouseEvent e) {
+        updatePlayerPosition(e.getX());
+    }
+
+    // 當按住滑鼠左鍵並拖曳時（射擊時移動），更新飛船位置
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        updatePlayerPosition(e.getX());
+    }
+
+    // 更新飛船位置的共用方法
+    private void updatePlayerPosition(int mouseX) {
+        playerX = mouseX;
+        if (playerX < 40) playerX = 40;
+        if (playerX > getWidth() - 40) playerX = getWidth() - 40;
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        // 按下滑鼠左鍵開始射擊
+        if (e.getButton() == MouseEvent.BUTTON1) {
+            isShooting = true;
         }
     }
 
     @Override
-    public void keyTyped(KeyEvent e) {}
+    public void mouseReleased(MouseEvent e) {
+        // 放開滑鼠左鍵停止射擊
+        if (e.getButton() == MouseEvent.BUTTON1) {
+            isShooting = false;
+        }
+    }
+
     @Override
-    public void keyReleased(KeyEvent e) {}
+    public void mouseClicked(MouseEvent e) {}
+    @Override
+    public void mouseEntered(MouseEvent e) {}
+    @Override
+    public void mouseExited(MouseEvent e) {}
 }
