@@ -1,4 +1,4 @@
-package 星際大戰;
+package StarWars;
 
 import javax.swing.*;
 

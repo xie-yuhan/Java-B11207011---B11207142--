@@ -1,4 +1,4 @@
-package 星際大戰;
+package StarWars;
 
 public class Laser {
     int x, y;
