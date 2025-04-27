@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 public class GamePanel extends JPanel implements MouseMotionListener, MouseListener, Runnable {
     private int playerX = 400, playerY = 500; // 玩家飛船位置
+    private Image playerImage;
     private ArrayList<Enemy> enemies; // 敵人列表
     private ArrayList<Laser> lasers; // 雷射列表
     private int score = 0; // 分數
@@ -20,6 +21,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
     public GamePanel() {
         enemies = new ArrayList<>();
         lasers = new ArrayList<>();
+        playerImage = new ImageIcon(getClass().getResource("/星際大戰/player.jpg")).getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
         setFocusable(true);
         addMouseMotionListener(this);
         addMouseListener(this);
@@ -29,26 +31,19 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        setBackground(Color.BLACK); // 背景設為黑色
-
-        // 畫星星
+        setBackground(Color.BLACK);//space
+        
         g.setColor(Color.WHITE);
         for (int i = 0; i < 100; i++) {
             int x = (int) (Math.random() * getWidth());
             int y = (int) (Math.random() * getHeight());
-            g.fillRect(x, y, 2, 2);
-        }
+            g.fillRect(x, y, 1, 1);
+        }//stars
 
-        // 畫玩家飛船 (簡單用矩形表示TIE戰鬥機)
-        g.setColor(Color.GRAY);
-        g.fillRect(playerX - 20, playerY - 10, 40, 20); // 機身
-        g.fillRect(playerX - 40, playerY, 20, 10); // 左翼
-        g.fillRect(playerX + 20, playerY, 20, 10); // 右翼
+        g.drawImage(playerImage, playerX - playerImage.getWidth(this)/2, playerY - playerImage.getHeight(this)/2, this);//player
 
-        // 畫敵人
-        g.setColor(Color.RED);
         for (Enemy enemy : enemies) {
-            g.fillRect(enemy.x, enemy.y, 20, 20);
+            enemy.draw(g, this);
         }
 
         // 畫雷射
@@ -74,7 +69,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         while (running) {
             // 生成敵人
             if (Math.random() < 0.02) {
-                enemies.add(new Enemy((int) (Math.random() * getWidth()), 0));
+               enemies.add(new Enemy((int) (Math.random() * getWidth()), 0, "/星際大戰/enemy1.jpg", 40, 40));
             }
 
             // 更新敵人位置
@@ -83,10 +78,11 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                 enemy.y += 3; // 敵人向下移動
                 if (enemy.y > getHeight()) {
                     enemies.remove(i); // 移除超出螢幕的敵人
-                } else {
+                } 
+                else {
                     // 簡單碰撞檢測（玩家與敵人）
                     if (Math.abs(enemy.x - playerX) < 30 && Math.abs(enemy.y - playerY) < 30) {
-                        health -= 20; // 每次碰撞減少20生命值
+                        health -= 10; // 每次碰撞減少20生命值
                         enemies.remove(i); // 敵人消失
                         if (health <= 0) {
                             running = false; // 生命值為0，遊戲結束
@@ -105,7 +101,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                     // 雷射與敵人碰撞檢測
                     for (int j = enemies.size() - 1; j >= 0; j--) {
                         Enemy enemy = enemies.get(j);
-                        if (Math.abs(laser.x - enemy.x) < 15 && Math.abs(laser.y - enemy.y) < 15) {
+                        if (Math.abs(laser.x - enemy.x) < 25 && Math.abs(laser.y - enemy.y) < 25) {
                             enemies.remove(j); // 敵人被擊中消失
                             lasers.remove(i); // 雷射消失
                             score += 10; // 擊敗敵人加10分
