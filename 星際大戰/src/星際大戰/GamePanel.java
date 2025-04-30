@@ -10,17 +10,22 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
     private Image playerImage;
     private ArrayList<Enemy> enemies; // 敵人列表
     private ArrayList<Laser> lasers; // 雷射列表
+    private ArrayList<PowerUp> powerUps;//Power the lasers
     private int score = 0; // 分數
     private int level = 1; // 關卡
     private int health = 100; // 生命值（初始100）
+    private int laserCount = 1; // 初始一發雷射
     private boolean running = true;
     private boolean isShooting = false; // 追蹤是否正在射擊
+    private boolean poweredUp = false;//checking if the props have been eaten
     private long lastShootTime = 0; // 上次射擊的時間
+    private long powerUpEndTime = 0; 
     private final long shootCooldown = 200; // 射擊冷卻時間（毫秒）
 
     public GamePanel() {
         enemies = new ArrayList<>();
         lasers = new ArrayList<>();
+        powerUps = new ArrayList<>();
         playerImage = new ImageIcon(getClass().getResource("/星際大戰/player.jpg")).getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
         setFocusable(true);
         addMouseMotionListener(this);
@@ -51,11 +56,20 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         for (Laser laser : lasers) {
             g.fillRect(laser.x, laser.y, 4, 10);
         }
+        
+        for (PowerUp pu : powerUps) {
+            pu.draw(g, this);
+        }
 
         // 畫分數和關卡
         g.setColor(Color.WHITE);
         g.drawString("SCORE: " + score, 10, 20);
         g.drawString("LEVEL: " + level, 10, 40);
+        
+        if (poweredUp) {
+            long remaining = (powerUpEndTime - System.currentTimeMillis()) / 1000;
+            g.drawString("POWER-UP: " + remaining + "s", 10, 60);
+        }
 
         // 畫生命值條
         g.setColor(Color.GREEN);
@@ -95,27 +109,61 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
             for (int i = lasers.size() - 1; i >= 0; i--) {
                 Laser laser = lasers.get(i);
                 laser.y -= 5; // 雷射向上移動
+                boolean laserHit = false;
+            
                 if (laser.y < 0) {
                     lasers.remove(i); // 移除超出螢幕的雷射
-                } else {
-                    // 雷射與敵人碰撞檢測
-                    for (int j = enemies.size() - 1; j >= 0; j--) {
-                        Enemy enemy = enemies.get(j);
-                        if (Math.abs(laser.x - enemy.x) < 25 && Math.abs(laser.y - enemy.y) < 25) {
-                            enemies.remove(j); // 敵人被擊中消失
-                            lasers.remove(i); // 雷射消失
-                            score += 10; // 擊敗敵人加10分
-                            break;
-                        }
+                    continue;
+                }
+            
+                // 雷射與敵人碰撞檢測
+                for (int j = enemies.size() - 1; j >= 0; j--) {
+                    Enemy enemy = enemies.get(j);
+                    if (Math.abs(laser.x - enemy.x) < 25 && Math.abs(laser.y - enemy.y) < 25) {
+                        enemies.remove(j); // 敵人被擊中消失
+                        score += 10; // 擊敗敵人加10分
+                        laserHit = true; // 標記雷射已命中
+                        break;
                     }
                 }
+            
+                if (laserHit) {
+                    lasers.remove(i); // 命中後移除雷射（放在外層，避免嵌套移除）
+                }
             }
+            
+            if (Math.random() < 0.005) {
+               powerUps.add(new PowerUp((int)(Math.random() * getWidth()), 0, "/星際大戰/powerup.jpg", 30, 30));
+            }
+            for (int i = powerUps.size() - 1; i >= 0; i--) {
+               PowerUp pu = powerUps.get(i);
+               pu.y += 2; // 道具向下掉
+
+               if (pu.y > getHeight()) {
+                  powerUps.remove(i); // 超出畫面
+               } 
+               else if (Math.abs(pu.x - playerX) < 30 && Math.abs(pu.y - playerY) < 30) {
+                  poweredUp = true;
+                  laserCount++; // 永久加一道雷射
+                  powerUpEndTime = System.currentTimeMillis() + 5000; // 強化效果持續5秒
+                  powerUps.remove(i);
+               }
+               if (System.currentTimeMillis() > powerUpEndTime) {
+                  poweredUp = false;
+                  laserCount = 1;
+               }
+            }
+            
 
             // 按住滑鼠左鍵時連續射擊
             if (isShooting) {
                 long currentTime = System.currentTimeMillis();
                 if (currentTime - lastShootTime >= shootCooldown) {
-                    lasers.add(new Laser(playerX, playerY - 10)); // 發射雷射
+                    int spacing = 10; // 雷射之間的水平間距
+                    int startX = playerX - (laserCount - 1) * spacing / 2;
+                    for (int i = 0; i < laserCount; i++) {
+                        lasers.add(new Laser(startX + i * spacing, playerY - 10));
+                    }
                     lastShootTime = currentTime;
                 }
             }
