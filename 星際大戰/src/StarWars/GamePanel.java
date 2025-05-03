@@ -1,179 +1,175 @@
 package StarWars;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
-
-public class GamePanel extends JPanel implements MouseMotionListener, MouseListener, Runnable {
-    private int playerX = 400, playerY = 500; // ª±®a­¸²î¦ì¸m
-    private ArrayList<Enemy> enemies; // ¼Ä¤H¦Cªí
-    private ArrayList<Laser> lasers; // ¹p®g¦Cªí
-    private int score = 0; // ¤À¼Æ
-    private int level = 1; // Ãö¥d
-    private int health = 100; // ¥Í©R­È¡]ªì©l100¡^
-    private boolean running = true;
-    private boolean isShooting = false; // °lÂÜ¬O§_¥¿¦b®gÀ»
-    private long lastShootTime = 0; // ¤W¦¸®gÀ»ªº®É¶¡
-    private final long shootCooldown = 200; // ®gÀ»§N«o®É¶¡¡]²@¬í¡^
-
-    public GamePanel() {
-        enemies = new ArrayList<>();
-        lasers = new ArrayList<>();
-        setFocusable(true);
-        addMouseMotionListener(this);
-        addMouseListener(this);
-        new Thread(this).start(); // ±Ò°Ê¹CÀ¸¥D´`Àô
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        setBackground(Color.BLACK); // ­I´º³]¬°¶Â¦â
-
-        // µe¬P¬P
-        g.setColor(Color.WHITE);
-        for (int i = 0; i < 100; i++) {
-            int x = (int) (Math.random() * getWidth());
-            int y = (int) (Math.random() * getHeight());
-            g.fillRect(x, y, 2, 2);
-        }
-
-        // µeª±®a­¸²î (Â²³æ¥Î¯x§Îªí¥ÜTIE¾Ô°«¾÷)
-        g.setColor(Color.GRAY);
-        g.fillRect(playerX - 20, playerY - 10, 40, 20); // ¾÷¨­
-        g.fillRect(playerX - 40, playerY, 20, 10); // ¥ªÁl
-        g.fillRect(playerX + 20, playerY, 20, 10); // ¥kÁl
-
-        // µe¼Ä¤H
-        g.setColor(Color.RED);
-        for (Enemy enemy : enemies) {
-            g.fillRect(enemy.x, enemy.y, 20, 20);
-        }
-
-        // µe¹p®g
-        g.setColor(Color.GREEN);
-        for (Laser laser : lasers) {
-            g.fillRect(laser.x, laser.y, 4, 10);
-        }
-
-        // µe¤À¼Æ©MÃö¥d
-        g.setColor(Color.WHITE);
-        g.drawString("SCORE: " + score, 10, 20);
-        g.drawString("LEVEL: " + level, 10, 40);
-
-        // µe¥Í©R­È±ø
-        g.setColor(Color.GREEN);
-        g.fillRect(playerX - 20, playerY + 20, health / 2, 5); // ¥Í©R­È±ø¡]®Ú¾ÚhealthÁY©ñ¡^
-        g.setColor(Color.RED);
-        g.fillRect(playerX - 20 + health / 2, playerY + 20, (100 - health) / 2, 5); // ·l¥¢ªº¥Í©R­È
-    }
-
-    @Override
-    public void run() {
-        while (running) {
-            // ¥Í¦¨¼Ä¤H
-            if (Math.random() < 0.02) {
-                enemies.add(new Enemy((int) (Math.random() * getWidth()), 0));
-            }
-
-            // §ó·s¼Ä¤H¦ì¸m
-            for (int i = enemies.size() - 1; i >= 0; i--) {
-                Enemy enemy = enemies.get(i);
-                enemy.y += 3; // ¼Ä¤H¦V¤U²¾°Ê
-                if (enemy.y > getHeight()) {
-                    enemies.remove(i); // ²¾°£¶W¥X¿Ã¹õªº¼Ä¤H
-                } else {
-                    // Â²³æ¸I¼²ÀË´ú¡]ª±®a»P¼Ä¤H¡^
-                    if (Math.abs(enemy.x - playerX) < 30 && Math.abs(enemy.y - playerY) < 30) {
-                        health -= 20; // ¨C¦¸¸I¼²´î¤Ö20¥Í©R­È
-                        enemies.remove(i); // ¼Ä¤H®ø¥¢
-                        if (health <= 0) {
-                            running = false; // ¥Í©R­È¬°0¡A¹CÀ¸µ²§ô
-                        }
-                    }
-                }
-            }
-
-            // §ó·s¹p®g¦ì¸m
-            for (int i = lasers.size() - 1; i >= 0; i--) {
-                Laser laser = lasers.get(i);
-                laser.y -= 5; // ¹p®g¦V¤W²¾°Ê
-                if (laser.y < 0) {
-                    lasers.remove(i); // ²¾°£¶W¥X¿Ã¹õªº¹p®g
-                } else {
-                    // ¹p®g»P¼Ä¤H¸I¼²ÀË´ú
-                    for (int j = enemies.size() - 1; j >= 0; j--) {
-                        Enemy enemy = enemies.get(j);
-                        if (Math.abs(laser.x - enemy.x) < 15 && Math.abs(laser.y - enemy.y) < 15) {
-                            enemies.remove(j); // ¼Ä¤H³QÀ»¤¤®ø¥¢
-                            lasers.remove(i); // ¹p®g®ø¥¢
-                            score += 10; // À»±Ñ¼Ä¤H¥[10¤À
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // «ö¦í·Æ¹«¥ªÁä®É³sÄò®gÀ»
-            if (isShooting) {
-                long currentTime = System.currentTimeMillis();
-                if (currentTime - lastShootTime >= shootCooldown) {
-                    lasers.add(new Laser(playerX, playerY - 10)); // µo®g¹p®g
-                    lastShootTime = currentTime;
-                }
-            }
-
-            repaint();
-            try {
-                Thread.sleep(16); // ¬ù60 FPS
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        JOptionPane.showMessageDialog(this, "Game Over! Score: " + score);
-        System.exit(0);
-    }
-
-    // ·í·Æ¹«²¾°Ê®É¡]¥¼«ö¦í¥ªÁä¡^¡A§ó·s­¸²î¦ì¸m
-    @Override
-    public void mouseMoved(MouseEvent e) {
-        updatePlayerPosition(e.getX());
-    }
-
-    // ·í«ö¦í·Æ¹«¥ªÁä¨Ã©ì¦²®É¡]®gÀ»®É²¾°Ê¡^¡A§ó·s­¸²î¦ì¸m
-    @Override
-    public void mouseDragged(MouseEvent e) {
-        updatePlayerPosition(e.getX());
-    }
-
-    // §ó·s­¸²î¦ì¸mªº¦@¥Î¤èªk
-    private void updatePlayerPosition(int mouseX) {
-        playerX = mouseX;
-        if (playerX < 40) playerX = 40;
-        if (playerX > getWidth() - 40) playerX = getWidth() - 40;
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-        // «ö¤U·Æ¹«¥ªÁä¶}©l®gÀ»
-        if (e.getButton() == MouseEvent.BUTTON1) {
-            isShooting = true;
-        }
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        // ©ñ¶}·Æ¹«¥ªÁä°±¤î®gÀ»
-        if (e.getButton() == MouseEvent.BUTTON1) {
-            isShooting = false;
-        }
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {}
-    @Override
-    public void mouseEntered(MouseEvent e) {}
-    @Override
-    public void mouseExited(MouseEvent e) {}
-}
+ 
+ import javax.swing.*;
+ import java.awt.*;
+ import java.awt.event.*;
+ import java.util.ArrayList;
+ 
+ public class GamePanel extends JPanel implements MouseMotionListener, MouseListener, Runnable {
+     private int playerX = 400, playerY = 500; // ç©å®¶é£›èˆ¹ä½ç½®
+     private Image playerImage;
+     private ArrayList<Enemy> enemies; // æ•µäººåˆ—è¡¨
+     private ArrayList<Laser> lasers; // é›·å°„åˆ—è¡¨
+     private int score = 0; // åˆ†æ•¸
+     private int level = 1; // é—œå¡
+     private int health = 100; // ç”Ÿå‘½å€¼ï¼ˆåˆå§‹100ï¼‰
+     private boolean running = true;
+     private boolean isShooting = false; // è¿½è¹¤æ˜¯å¦æ­£åœ¨å°„æ“Š
+     private long lastShootTime = 0; // ä¸Šæ¬¡å°„æ“Šçš„æ™‚é–“
+     private final long shootCooldown = 200; // å°„æ“Šå†·å»æ™‚é–“ï¼ˆæ¯«ç§’ï¼‰
+ 
+     public GamePanel() {
+         enemies = new ArrayList<>();
+         lasers = new ArrayList<>();
+         playerImage = new ImageIcon(getClass().getResource("/æ˜Ÿéš›å¤§æˆ°/player.jpg")).getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
+         setFocusable(true);
+         addMouseMotionListener(this);
+         addMouseListener(this);
+         new Thread(this).start(); // å•Ÿå‹•éŠæˆ²ä¸»å¾ªç’°
+     }
+ 
+     @Override
+     protected void paintComponent(Graphics g) {
+         super.paintComponent(g);
+         setBackground(Color.BLACK);//space
+         
+         g.setColor(Color.WHITE);
+         for (int i = 0; i < 100; i++) {
+             int x = (int) (Math.random() * getWidth());
+             int y = (int) (Math.random() * getHeight());
+             g.fillRect(x, y, 1, 1);
+         }//stars
+ 
+         g.drawImage(playerImage, playerX - playerImage.getWidth(this)/2, playerY - playerImage.getHeight(this)/2, this);//player
+ 
+         for (Enemy enemy : enemies) {
+             enemy.draw(g, this);
+         }
+ 
+         // ç•«é›·å°„
+         g.setColor(Color.GREEN);
+         for (Laser laser : lasers) {
+             g.fillRect(laser.x, laser.y, 4, 10);
+         }
+ 
+         // ç•«åˆ†æ•¸å’Œé—œå¡
+         g.setColor(Color.WHITE);
+         g.drawString("SCORE: " + score, 10, 20);
+         g.drawString("LEVEL: " + level, 10, 40);
+ 
+         // ç•«ç”Ÿå‘½å€¼æ¢
+         g.setColor(Color.GREEN);
+         g.fillRect(playerX - 20, playerY + 20, health / 2, 5); // ç”Ÿå‘½å€¼æ¢ï¼ˆæ ¹æ“šhealthç¸®æ”¾ï¼‰
+         g.setColor(Color.RED);
+         g.fillRect(playerX - 20 + health / 2, playerY + 20, (100 - health) / 2, 5); // æå¤±çš„ç”Ÿå‘½å€¼
+     }
+ 
+     @Override
+     public void run() {
+         while (running) {
+             // ç”Ÿæˆæ•µäºº
+             if (Math.random() < 0.02) {
+                enemies.add(new Enemy((int) (Math.random() * getWidth()), 0, "/æ˜Ÿéš›å¤§æˆ°/enemy1.jpg", 40, 40));
+             }
+ 
+             // æ›´æ–°æ•µäººä½ç½®
+             for (int i = enemies.size() - 1; i >= 0; i--) {
+                 Enemy enemy = enemies.get(i);
+                 enemy.y += 3; // æ•µäººå‘ä¸‹ç§»å‹•
+                 if (enemy.y > getHeight()) {
+                     enemies.remove(i); // ç§»é™¤è¶…å‡ºè¢å¹•çš„æ•µäºº
+                 } 
+                 else {
+                     // ç°¡å–®ç¢°æ’æª¢æ¸¬ï¼ˆç©å®¶èˆ‡æ•µäººï¼‰
+                     if (Math.abs(enemy.x - playerX) < 30 && Math.abs(enemy.y - playerY) < 30) {
+                         health -= 10; // æ¯æ¬¡ç¢°æ’æ¸›å°‘20ç”Ÿå‘½å€¼
+                         enemies.remove(i); // æ•µäººæ¶ˆå¤±
+                         if (health <= 0) {
+                             running = false; // ç”Ÿå‘½å€¼ç‚º0ï¼ŒéŠæˆ²çµæŸ
+                         }
+                     }
+                 }
+             }
+ 
+             // æ›´æ–°é›·å°„ä½ç½®
+             for (int i = lasers.size() - 1; i >= 0; i--) {
+                 Laser laser = lasers.get(i);
+                 laser.y -= 5; // é›·å°„å‘ä¸Šç§»å‹•
+                 if (laser.y < 0) {
+                     lasers.remove(i); // ç§»é™¤è¶…å‡ºè¢å¹•çš„é›·å°„
+                 } else {
+                     // é›·å°„èˆ‡æ•µäººç¢°æ’æª¢æ¸¬
+                     for (int j = enemies.size() - 1; j >= 0; j--) {
+                         Enemy enemy = enemies.get(j);
+                         if (Math.abs(laser.x - enemy.x) < 25 && Math.abs(laser.y - enemy.y) < 25) {
+                             enemies.remove(j); // æ•µäººè¢«æ“Šä¸­æ¶ˆå¤±
+                             lasers.remove(i); // é›·å°„æ¶ˆå¤±
+                             score += 10; // æ“Šæ•—æ•µäººåŠ 10åˆ†
+                             break;
+                         }
+                     }
+                 }
+             }
+ 
+             // æŒ‰ä½æ»‘é¼ å·¦éµæ™‚é€£çºŒå°„æ“Š
+             if (isShooting) {
+                 long currentTime = System.currentTimeMillis();
+                 if (currentTime - lastShootTime >= shootCooldown) {
+                     lasers.add(new Laser(playerX, playerY - 10)); // ç™¼å°„é›·å°„
+                     lastShootTime = currentTime;
+                 }
+             }
+ 
+             repaint();
+             try {
+                 Thread.sleep(16); // ç´„60 FPS
+             } catch (InterruptedException e) {
+                 e.printStackTrace();
+             }
+         }
+         JOptionPane.showMessageDialog(this, "Game Over! Score: " + score);
+         System.exit(0);
+     }
+ 
+     // ç•¶æ»‘é¼ ç§»å‹•æ™‚ï¼ˆæœªæŒ‰ä½å·¦éµï¼‰ï¼Œæ›´æ–°é£›èˆ¹ä½ç½®
+     @Override
+     public void mouseMoved(MouseEvent e) {
+         updatePlayerPosition(e.getX());
+     }
+ 
+     // ç•¶æŒ‰ä½æ»‘é¼ å·¦éµä¸¦æ‹–æ›³æ™‚ï¼ˆå°„æ“Šæ™‚ç§»å‹•ï¼‰ï¼Œæ›´æ–°é£›èˆ¹ä½ç½®
+     @Override
+     public void mouseDragged(MouseEvent e) {
+         updatePlayerPosition(e.getX());
+     }
+ 
+     // æ›´æ–°é£›èˆ¹ä½ç½®çš„å…±ç”¨æ–¹æ³•
+     private void updatePlayerPosition(int mouseX) {
+         playerX = mouseX;
+         if (playerX < 40) playerX = 40;
+         if (playerX > getWidth() - 40) playerX = getWidth() - 40;
+     }
+ 
+     @Override
+     public void mousePressed(MouseEvent e) {
+         // æŒ‰ä¸‹æ»‘é¼ å·¦éµé–‹å§‹å°„æ“Š
+         if (e.getButton() == MouseEvent.BUTTON1) {
+             isShooting = true;
+         }
+     }
+ 
+     @Override
+     public void mouseReleased(MouseEvent e) {
+         // æ”¾é–‹æ»‘é¼ å·¦éµåœæ­¢å°„æ“Š
+         if (e.getButton() == MouseEvent.BUTTON1) {
+             isShooting = false;
+         }
+     }
+ 
+     @Override
+     public void mouseClicked(MouseEvent e) {}
+     @Override
+     public void mouseEntered(MouseEvent e) {}
+     @Override
+     public void mouseExited(MouseEvent e) {}
+ }
