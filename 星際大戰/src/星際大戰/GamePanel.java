@@ -66,14 +66,15 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
 
         // 確保 earth 已初始化，並且尺寸有效
         if (earth == null && getWidth() > 0 && getHeight() > 0) {
-            earth = new Earth(getWidth() / 2, getHeight() - 100, "/星際大戰/earth.jpg", getWidth(), 200);
+            earth = new Earth(getWidth() / 2, getHeight() - 100, getWidth() / 2 + 40, getHeight() + 600, "/星際大戰/earth.jpg", getWidth(), 200);
         }
 
         // 繪製地球
         if (earth != null) {
             earth.draw(g, this);
+            // 繪製圓弧邊界（圓的上半部分）
             g.setColor(Color.RED);
-            g.drawRect(earth.getX() - earth.getWidth() / 2, earth.getY() - earth.getHeight() / 2, earth.getWidth(), earth.getHeight());
+            g.drawArc(earth.getCollisionX() - earth.getRadius(), earth.getCollisionY() - earth.getRadius(), earth.getRadius() * 2, earth.getRadius() * 2, 0, 180);
         }
 
         // 繪製玩家飛船（確保在地球之上）
@@ -143,13 +144,16 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                             running = false; // 玩家生命值為0，遊戲結束
                         }
                     }
-                    // 碰撞檢測（敵人與地球）
-                    if (earth != null && enemy.y + enemy.height >= earth.getY() - earth.getHeight() / 2 &&
-                        Math.abs(enemy.x - earth.getX()) < earth.getWidth() / 2) {
-                        earthHealth -= 10; // 每次到達扣10生命值
-                        enemies.remove(i);
-                        if (earthHealth <= 0) {
-                            running = false; // 地球生命值為0，遊戲結束
+                    // 碰撞檢測（敵人與地球，使用圓弧邊界）
+                    if (earth != null) {
+                        double distance = Math.sqrt(Math.pow(enemy.x - earth.getCollisionX(), 2) + Math.pow(enemy.y - earth.getCollisionY(), 2));
+                        // 檢查是否在圓弧範圍內（Y <= 600 且距離 <= 半徑）
+                        if (enemy.y <= earth.getY() && distance <= earth.getRadius() + enemy.height / 2) {
+                            earthHealth -= 10; // 每次到達扣10生命值
+                            enemies.remove(i);
+                            if (earthHealth <= 0) {
+                                running = false; // 地球生命值為0，遊戲結束
+                            }
                         }
                     }
                 }

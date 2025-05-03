@@ -6,20 +6,23 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 
 public class Earth {
-    private int x, y;
+    private int x, y; // 圖片繪製的中心 X, Y 座標
+    private int collisionX, collisionY; // 碰撞圓心的 X, Y 座標
     private int width, height;
+    private int radius; // 圓形半徑
     private Image image;
 
-    public Earth(int x, int y, String imagePath, int width, int height) {
-        this.x = x;
-        this.y = y;
-        // 確保寬度至少為 1，防止 getScaledInstance 錯誤
+    public Earth(int x, int y, int collisionX, int collisionY, String imagePath, int width, int height) {
+        this.x = x; // 圖片繪製的 X 座標
+        this.y = y; // 圖片繪製的 Y 座標
+        this.collisionX = collisionX; // 碰撞圓心的 X 座標
+        this.collisionY = collisionY; // 碰撞圓心的 Y 座標
         this.width = Math.max(1, width);
         this.height = Math.max(1, height);
+        this.radius = 800; // 半徑為 600
         Image tempImage = new ImageIcon(getClass().getResource(imagePath)).getImage();
         if (tempImage == null) {
             System.err.println("Failed to load image from resource: " + imagePath);
-            // 嘗試使用絕對路徑加載
             try {
                 tempImage = new ImageIcon(new File("C:\\Users\\yuhan\\OneDrive\\Documents\\GitHub\\Java-B11207011-Xie-Yuhan-B11207142-Xu-Yuming\\星際大戰\\src\\星際大戰\\earth.jpg").toURI().toURL()).getImage();
                 System.out.println("Loaded image from absolute path: C:\\Users\\yuhan\\OneDrive\\Documents\\GitHub\\Java-B11207011-Xie-Yuhan-B11207142-Xu-Yuming\\星際大戰\\src\\星際大戰\\earth.jpg");
@@ -43,7 +46,7 @@ public class Earth {
     }
 
     public void draw(Graphics g, JPanel panel) {
-        // 確保繪製時使用正確的中心點
+        // 繪製時使用圖片繪製的 X, Y 座標
         g.drawImage(image, x - width / 2, y - height / 2, panel);
     }
 
@@ -51,8 +54,11 @@ public class Earth {
         return new Rectangle(x - width / 2, y - height / 2, width, height);
     }
 
-    public int getX() { return x; }
-    public int getY() { return y; }
+    public int getX() { return x; } // 返回圖片的 X 座標
+    public int getY() { return y; } // 返回圖片的 Y 座標
+    public int getCollisionX() { return collisionX; } // 返回碰撞圓心的 X 座標
+    public int getCollisionY() { return collisionY; } // 返回碰撞圓心的 Y 座標
     public int getWidth() { return width; }
     public int getHeight() { return height; }
+    public int getRadius() { return radius; }
 }
