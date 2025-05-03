@@ -8,6 +8,7 @@ import java.util.ArrayList;
 public class GamePanel extends JPanel implements MouseMotionListener, MouseListener, Runnable {
     private int playerX = 400, playerY = 400; // 玩家飛船位置（中心點，向上調整）
     private Image playerImage;
+    private Image backgroundImage; // 星空背景圖片
     private ArrayList<Enemy> enemies; // 普通敵人列表
     private ArrayList<Laser> lasers; // 雷射列表
     private ArrayList<PowerUp> powerUps; // 道具列表
@@ -31,6 +32,11 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         powerUps = new ArrayList<>();
         // 加載玩家飛船圖片並設置尺寸
         playerImage = new ImageIcon(getClass().getResource("/星際大戰/player.jpg")).getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
+        // 加載調整後的星空背景圖片
+        backgroundImage = new ImageIcon(getClass().getResource("/星際大戰/stars.jpg")).getImage();
+        if (backgroundImage == null) {
+            System.err.println("Failed to load background image: /星際大戰/stars.jpg");
+        }
         playerWidth = 60; // 圖片寬度
         playerHeight = 60; // 圖片高度
         setFocusable(true);
@@ -48,75 +54,69 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        setBackground(Color.BLACK); // 空間背景
+
+        // 繪製星空背景作為最底層，只覆蓋地球上方的區域
+        if (backgroundImage != null && earth != null) {
+            int earthY = earth.getY() - earth.getHeight() / 2; // 地球的上邊界
+            g.drawImage(backgroundImage, 0, 0, getWidth(), earthY, this); // 只繪製到地球的上半部分
+        } else {
+            g.setColor(Color.BLACK); // 備用黑色背景
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
 
         // 確保 earth 已初始化，並且尺寸有效
         if (earth == null && getWidth() > 0 && getHeight() > 0) {
             earth = new Earth(getWidth() / 2, getHeight() - 100, "/星際大戰/earth.jpg", getWidth(), 200);
-            if (earth.getImage() == null) {
-                System.out.println("Earth image failed to load or initialize. Earth Y: " + (getHeight() - 100));
-            } else {
-                System.out.println("Earth image loaded successfully. Earth Y: " + (getHeight() - 100));
-            }
         }
 
-        // 畫星星
-        g.setColor(Color.WHITE);
-        for (int i = 0; i < 100; i++) {
-            int x = (int) (Math.random() * getWidth());
-            int y = (int) (Math.random() * getHeight());
-            g.fillRect(x, y, 1, 1);
-        }
-
-        // 畫地球（在星星之後、飛船之前）
+        // 繪製地球
         if (earth != null) {
             earth.draw(g, this);
-            // 臨時標記地球位置（紅色矩形）
             g.setColor(Color.RED);
             g.drawRect(earth.getX() - earth.getWidth() / 2, earth.getY() - earth.getHeight() / 2, earth.getWidth(), earth.getHeight());
         }
 
-        // 畫玩家飛船（以中心點為基準）
+        // 繪製玩家飛船（確保在地球之上）
         g.drawImage(playerImage, playerX - playerWidth / 2, playerY - playerHeight / 2, this);
 
-        // 畫普通敵人
+        // 繪製普通敵人
         for (Enemy enemy : enemies) {
             enemy.draw(g, this);
         }
 
-        // 畫雷射
+        // 繪製雷射
         g.setColor(Color.GREEN);
         for (Laser laser : lasers) {
             g.fillRect(laser.x, laser.y, 4, 10);
         }
 
-        // 畫道具
+        // 繪製道具
         for (PowerUp pu : powerUps) {
             pu.draw(g, this);
         }
 
-        // 畫分數和關卡
+        // 繪製分數和關卡
         g.setColor(Color.WHITE);
         g.drawString("SCORE: " + score, 10, 20);
         g.drawString("LEVEL: " + level, 10, 40);
 
-        // 畫道具強化倒計時
+        // 繪製道具強化倒計時
         if (poweredUp) {
             long remaining = (powerUpEndTime - System.currentTimeMillis()) / 1000;
             g.drawString("POWER-UP: " + remaining + "s", 10, 60);
         }
 
-        // 畫玩家生命值條（跟隨飛船中心點）
+        // 繪製玩家生命值條（跟隨飛船中心點）
         g.setColor(Color.GREEN);
-        g.fillRect(playerX - 20, playerY + 30, health / 2, 5); // 玩家生命值條
+        g.fillRect(playerX - 20, playerY + 30, health / 2, 5);
         g.setColor(Color.RED);
-        g.fillRect(playerX - 20 + health / 2, playerY + 30, (100 - health) / 2, 5); // 玩家損失生命值
+        g.fillRect(playerX - 20 + health / 2, playerY + 30, (100 - health) / 2, 5);
 
-        // 畫地球生命值條（顯示在畫面頂部）
+        // 繪製地球生命值條（顯示在畫面頂部）
         g.setColor(Color.BLUE);
-        g.fillRect(10, 10, earthHealth / 5, 10); // 地球生命值條（500 / 5 = 100像素寬）
+        g.fillRect(10, 10, earthHealth / 5, 10);
         g.setColor(Color.RED);
-        g.fillRect(10 + earthHealth / 5, 10, (500 - earthHealth) / 5, 10); // 損失的地球生命值
+        g.fillRect(10 + earthHealth / 5, 10, (500 - earthHealth) / 5, 10);
     }
 
     @Override
@@ -146,7 +146,6 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                     // 碰撞檢測（敵人與地球）
                     if (earth != null && enemy.y + enemy.height >= earth.getY() - earth.getHeight() / 2 &&
                         Math.abs(enemy.x - earth.getX()) < earth.getWidth() / 2) {
-                        System.out.println("Enemy hit Earth at Y: " + enemy.y + ", Earth Y: " + earth.getY() + ", Earth Health: " + earthHealth);
                         earthHealth -= 10; // 每次到達扣10生命值
                         enemies.remove(i);
                         if (earthHealth <= 0) {
