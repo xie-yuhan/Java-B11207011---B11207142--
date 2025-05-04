@@ -16,7 +16,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
     private int score = 0; // 分數
     private int level = 1; // 關卡
     private int health = 100; // 玩家生命值（初始100）
-    private int earthHealth = 500; // 地球生命值（初始500）
+    private int earthHealth = 50; // 地球生命值（初始500）
     private int laserCount = 1; // 初始一發雷射
     private boolean running = true;
     private boolean isShooting = false; // 追蹤是否正在射擊
@@ -98,13 +98,13 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
 
         // 繪製分數和關卡
         g.setColor(Color.WHITE);
-        g.drawString("SCORE: " + score, 10, 20);
         g.drawString("LEVEL: " + level, 10, 40);
+        g.drawString("SCORE: " + score, 10, 60);
 
         // 繪製道具強化倒計時
         if (poweredUp) {
             long remaining = (powerUpEndTime - System.currentTimeMillis()) / 1000;
-            g.drawString("POWER-UP: " + remaining + "s", 10, 60);
+            g.drawString("POWER-UP: " + remaining + "s", 10, 80);
         }
 
         // 繪製玩家生命值條（跟隨飛船中心點）
@@ -233,8 +233,14 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                 e.printStackTrace();
             }
         }
-        JOptionPane.showMessageDialog(this, "Game Over! Score: " + score + "\nEarth Destroyed!");
-        System.exit(0);
+        SwingUtilities.invokeLater(() -> {
+            JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+            topFrame.setContentPane(new GameOverPanel(score, earthHealth <= 0, () -> {
+               topFrame.setContentPane(new GamePanel());  // 重啟遊戲
+               topFrame.revalidate();
+            }));
+            topFrame.revalidate();
+        });
     }
 
     // 當滑鼠移動時（未按住左鍵），更新飛船位置
