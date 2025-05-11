@@ -6,6 +6,8 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Random;
 import javax.sound.sampled.*;
+import java.io.IOException;
+import java.net.URL;
 
 public class GamePanel extends JPanel implements MouseMotionListener, MouseListener, Runnable {
     private int playerX = 400, playerY = 400; // 玩家飛船位置（中心點，向上調整）
@@ -16,6 +18,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
     private ArrayList<Laser> lasers; // 玩家雷射列表
     private ArrayList<Laser> enemyLasers; // 敵人光束列表
     private ArrayList<PowerUp> powerUps; // 道具列表
+    private ArrayList<Explosion> explosions;
     private Earth earth; // 地球對象
     private Boss boss; // BOSS 對象
     private int score = 0; // 分數
@@ -48,9 +51,8 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         lasers = new ArrayList<>();
         enemyLasers = new ArrayList<>();
         powerUps = new ArrayList<>();
-        // 加載玩家飛船圖片並設置尺寸
+        explosions = new ArrayList<>();
         playerImage = new ImageIcon(getClass().getResource("/星際大戰/player.jpg")).getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
-        // 加載調整後的星空背景圖片
         backgroundImage = new ImageIcon(getClass().getResource("/星際大戰/stars.jpg")).getImage();
         if (backgroundImage == null) {
             System.err.println("Failed to load background image: /星際大戰/stars.jpg");
@@ -149,6 +151,15 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
             g.setColor(Color.WHITE);
             g.drawString("BOSS HP: " + boss.health + "/1000", bossHealthBarX, bossHealthBarY - 5);
         }
+        for (int i = explosions.size() - 1; i >= 0; i--) {
+             Explosion explosion = explosions.get(i);
+             if (explosion.isExpired()) {
+                 explosions.remove(i);
+             } 
+             else {
+                 explosion.draw(g, this);
+             }
+        }
     }
 
     @Override
@@ -189,6 +200,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                         Math.abs(enemy.y - playerY) < (enemy.height + playerHeight) / 2) {
                         health -= 10;
                         enemies.remove(i);
+                        explosions.add(new Explosion(enemy.x + (enemy.width / 4), enemy.y + (enemy.height / 4) , "/星際大戰/explosive.jpg"));
                         if (health <= 0) {
                             running = false;
                         }
@@ -224,6 +236,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                     Math.abs(enemy.y - playerY) < (enemy.height + playerHeight) / 2) {
                     health -= 15;
                     attackingEnemies.remove(i);
+                    explosions.add(new Explosion(enemy.x + (enemy.width / 2), enemy.y + (enemy.height / 2), "/星際大戰/explosive.jpg"));
                     if (health <= 0) {
                         running = false;
                     }
@@ -233,6 +246,8 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                     enemy.lastShootTime = 0;
                 }
             }
+            
+
 
             for (int i = enemyLasers.size() - 1; i >= 0; i--) {
                 Laser laser = enemyLasers.get(i);
@@ -283,6 +298,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                     if (Math.abs(laser.x - enemy.x) < (enemy.width + 4) / 2 &&
                         Math.abs(laser.y - enemy.y) < (enemy.height + 10) / 2) {
                         playShootSound("/星際大戰/shooted.wav");
+                        explosions.add(new Explosion(enemy.x, enemy.y, "/星際大戰/explosive.jpg"));
                         enemies.remove(j);
                         score += 10;
                         laserHit = true;
@@ -295,6 +311,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                     if (Math.abs(laser.x - enemy.x) < (enemy.width + 4) / 2 &&
                         Math.abs(laser.y - enemy.y) < (enemy.height + 10) / 2) {
                         playShootSound("/星際大戰/shooted.wav");
+                        explosions.add(new Explosion(enemy.x + (enemy.width / 2), enemy.y + (enemy.height / 2), "/星際大戰/explosive.jpg"));
                         attackingEnemies.remove(j);
                         score += 15;
                         laserHit = true;
