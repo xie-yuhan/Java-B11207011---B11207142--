@@ -1,7 +1,6 @@
 package 星際大戰;
 
 import javax.swing.*;
-<<<<<<< HEAD
 import javax.sound.sampled.*;
 import java.net.URL;
 import java.util.ArrayList;
@@ -12,25 +11,15 @@ public class StarWarsGame extends JFrame {
     private Clip backgroundMusicClip; // 共享的背景音樂 Clip
     private ArrayList<ScoreEntry> leaderboard = new ArrayList<>(); // 儲存排行榜數據
 
-=======
-public class StarWarsGame extends JFrame {
->>>>>>> e149a2d1556e47ff99f0bd23e0199a16c74576f4
     public StarWarsGame() {
         setTitle("星際大戰 - Space Wars");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-<<<<<<< HEAD
 
         // 載入排行榜數據
         loadLeaderboard();
         // 初始化並顯示 GameCoverPanel
         showGameCoverPanel();
-=======
-        
-        // 顯示遊戲封面面板
-        GameCoverPanel coverPanel = new GameCoverPanel(() -> startGame());
-        setContentPane(coverPanel);
->>>>>>> e149a2d1556e47ff99f0bd23e0199a16c74576f4
         setVisible(true);
 
         // 註冊窗口關閉事件，保存排行榜數據
@@ -159,14 +148,7 @@ public class StarWarsGame extends JFrame {
             return name + ": " + score + (isGameComplete ? " (Game Complete)" : " (Game Over)");
         }
     }
-    
-    private void startGame() {
-        // 切換到遊戲面板
-        GamePanel gamePanel = new GamePanel();
-        setContentPane(gamePanel);
-        revalidate(); // 重新驗證和刷新界面
-    }
-    
+
     public static void main(String[] args) {
         new StarWarsGame();
     }
