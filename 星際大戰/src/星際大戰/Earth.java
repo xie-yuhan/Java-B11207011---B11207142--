@@ -25,8 +25,9 @@ public class Earth {
             System.err.println("Failed to load image from resource: " + imagePath);
             try {
                 tempImage = new ImageIcon(new File("C:\\Users\\yuhan\\OneDrive\\Documents\\GitHub\\Java-B11207011-Xie-Yuhan-B11207142-Xu-Yuming\\星際大戰\\src\\星際大戰\\earth.jpg").toURI().toURL()).getImage();
-                System.out.println("Loaded image from absolute path: C:\\Users\\yuhan\\OneDrive\\Documents\\GitHub\\Java-B11207011-Xie-Yuhan-B11207142-Xu-Yuming\\星際大戰\\src\\星際大戰\\earth.jpg");
-            } catch (Exception e) {
+                System.out.println("\\星際大戰\\earth.jpg");
+            } 
+            catch (Exception e) {
                 System.err.println("Failed to load image from absolute path: " + e.getMessage());
             }
         }

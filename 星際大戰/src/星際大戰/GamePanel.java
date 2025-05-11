@@ -282,6 +282,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                     Enemy enemy = enemies.get(j);
                     if (Math.abs(laser.x - enemy.x) < (enemy.width + 4) / 2 &&
                         Math.abs(laser.y - enemy.y) < (enemy.height + 10) / 2) {
+                        playShootSound("/星際大戰/shooted.wav");
                         enemies.remove(j);
                         score += 10;
                         laserHit = true;
@@ -293,6 +294,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                     Enemy enemy = attackingEnemies.get(j);
                     if (Math.abs(laser.x - enemy.x) < (enemy.width + 4) / 2 &&
                         Math.abs(laser.y - enemy.y) < (enemy.height + 10) / 2) {
+                        playShootSound("/星際大戰/shooted.wav");
                         attackingEnemies.remove(j);
                         score += 15;
                         laserHit = true;
@@ -345,8 +347,8 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                     int startX = playerX - (laserCount - 1) * spacing / 2;
                     for (int i = 0; i < laserCount; i++) {
                         lasers.add(new Laser(startX + i * spacing, playerY - playerHeight / 2 - 10));
+                        playShootSound("/星際大戰/shoot.wav");
                     }
-                    playShootSound();
                     lastShootTime = currentTime;
                 }
             }
@@ -385,15 +387,16 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         }
     }
 
-    private void playShootSound() {
-        try {
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(getClass().getResource("/星際大戰/shoot.wav"));
-            Clip clip = AudioSystem.getClip();
-            clip.open(audioStream);
-            clip.start(); // 單次播放
-        } catch (Exception e) {
-            System.err.println("Failed to load or play shoot sound: " + e.getMessage());
-        }
+    private void playShootSound(String soundFileName) {
+       try {
+           AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource(soundFileName));
+           Clip clip = AudioSystem.getClip();
+           clip.open(audioInputStream);
+           clip.start();
+       } 
+       catch (Exception e) {
+           e.printStackTrace();
+       }
     }
 
     private void switchToBossMusic() {

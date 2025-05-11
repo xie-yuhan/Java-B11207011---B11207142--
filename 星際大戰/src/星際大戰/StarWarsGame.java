@@ -39,6 +39,12 @@ public class StarWarsGame extends JFrame {
         // 重新播放背景音樂
         playBackgroundMusic();
     }
+    
+    public void showLeaderboard() {
+        LeaderboardPanel leaderboardPanel = new LeaderboardPanel(this::showGameCoverPanel, leaderboard);
+        setContentPane(leaderboardPanel);
+        revalidate();
+    }
 
     private void playBackgroundMusic() {
         try {
@@ -74,12 +80,6 @@ public class StarWarsGame extends JFrame {
     public void startGame() {
         GamePanel gamePanel = new GamePanel(this, backgroundMusicClip);
         setContentPane(gamePanel);
-        revalidate();
-    }
-
-    public void showLeaderboard() {
-        LeaderboardPanel leaderboardPanel = new LeaderboardPanel(this::showGameCoverPanel, leaderboard);
-        setContentPane(leaderboardPanel);
         revalidate();
     }
 
