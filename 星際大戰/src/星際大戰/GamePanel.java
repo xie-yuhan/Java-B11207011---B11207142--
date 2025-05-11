@@ -20,8 +20,13 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
     private Boss boss; // BOSS 對象
     private int score = 0; // 分數
     private int level = 1; // 關卡
+<<<<<<< HEAD
     private int health = 500; // 玩家生命值（初始500，與顯示一致）
     private int earthHealth = 500; // 地球生命值（初始500，與顯示一致）
+=======
+    private int health = 100; // 玩家生命值（初始100）
+    private int earthHealth = 50; // 地球生命值（初始500）
+>>>>>>> e149a2d1556e47ff99f0bd23e0199a16c74576f4
     private int laserCount = 1; // 初始一發雷射
     private boolean running = true;
     private boolean isShooting = false; // 追蹤是否正在射擊
@@ -358,6 +363,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                 e.printStackTrace();
             }
         }
+<<<<<<< HEAD
         stopAllMusic();
         SwingUtilities.invokeLater(() -> {
             JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
@@ -423,6 +429,16 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
             bossMusicClip.stop();
             bossMusicClip.close();
         }
+=======
+        SwingUtilities.invokeLater(() -> {
+            JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+            topFrame.setContentPane(new GameOverPanel(score, earthHealth <= 0, () -> {
+               topFrame.setContentPane(new GamePanel());  // 重啟遊戲
+               topFrame.revalidate();
+            }));
+            topFrame.revalidate();
+        });
+>>>>>>> e149a2d1556e47ff99f0bd23e0199a16c74576f4
     }
 
     @Override
