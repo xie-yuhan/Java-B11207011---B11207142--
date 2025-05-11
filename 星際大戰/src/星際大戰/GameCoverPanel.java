@@ -15,17 +15,17 @@ public class GameCoverPanel extends JPanel {
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JButton startButton = new JButton("Start Game");
+        JButton startButton = new JButton("開始遊戲");
         startButton.setFont(new Font("Microsoft JhengHei", Font.BOLD, 24));
         startButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         startButton.addActionListener(e -> onStartGame.run());
 
-        JButton leaderboardButton = new JButton("View Leaderboard");
+        JButton leaderboardButton = new JButton("排行榜");
         leaderboardButton.setFont(new Font("Microsoft JhengHei", Font.BOLD, 24));
         leaderboardButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         leaderboardButton.addActionListener(e -> onShowLeaderboard.run());
 
-        JButton volumeButton = new JButton("Volume");
+        JButton volumeButton = new JButton("音量大小");
         volumeButton.setFont(new Font("Microsoft JhengHei", Font.BOLD, 24));
         volumeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         volumeButton.addActionListener(e -> onShowVolume.run());

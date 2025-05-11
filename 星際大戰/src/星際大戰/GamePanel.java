@@ -34,7 +34,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
     private long lastBossAttackTime = 0; // 上次 BOSS 攻擊時間
     private final long shootCooldown = 200; // 射擊冷卻時間（毫秒）
     private final long bossAttackCooldown = 5000; // BOSS 攻擊冷卻時間
-    private final long enemyLaserCooldown = 500; // 敵人光束冷卻時間（縮短為 500 毫秒）
+    private final long enemyLaserCooldown = 500; //    敵人光束冷卻時間（縮短為 500 毫秒）
     private int playerWidth, playerHeight; // 玩家飛船圖片的寬高
     private boolean hasSpawnedFirstWave = false; // 追蹤第一波敵人是否已生成
     private boolean hasSpawnedSecondWave = false; // 追蹤第二波敵人是否已生成
@@ -377,6 +377,8 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                 e.printStackTrace();
             }
         }
+        
+        // victory and defeat
         stopAllMusic();
         SwingUtilities.invokeLater(() -> {
             JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);

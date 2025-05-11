@@ -13,7 +13,7 @@ public class Explosion {
         this.x = x;
         this.y = y;
         this.startTime = System.currentTimeMillis();
-        this.image = new ImageIcon(getClass().getResource(imagePath)).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH);
+        this.image = new ImageIcon(getClass().getResource(imagePath)).getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
     }
 
     public boolean isExpired() {
