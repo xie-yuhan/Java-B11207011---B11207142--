@@ -19,7 +19,7 @@ public class Earth {
         this.collisionY = collisionY; // 碰撞圓心的 Y 座標
         this.width = Math.max(1, width);
         this.height = Math.max(1, height);
-        this.radius = 800; // 半徑為 600
+        this.radius = 800; // 半徑為 800
         Image tempImage = new ImageIcon(getClass().getResource(imagePath)).getImage();
         if (tempImage == null) {
             System.err.println("Failed to load image from resource: " + imagePath);
