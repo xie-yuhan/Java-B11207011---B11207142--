@@ -6,8 +6,6 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Random;
 import javax.sound.sampled.*;
-import java.io.IOException;
-import java.net.URL;
 
 public class GamePanel extends JPanel implements MouseMotionListener, MouseListener, Runnable {
     private int playerX = 400, playerY = 400; // 玩家飛船位置（中心點，向上調整）
@@ -17,6 +15,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
     private ArrayList<Enemy> attackingEnemies; // 攻擊玩家敵人列表
     private ArrayList<Laser> lasers; // 玩家雷射列表
     private ArrayList<Laser> enemyLasers; // 敵人光束列表
+    private ArrayList<BossLaser> bossLasers; // BOSS 超強雷射列表
     private ArrayList<PowerUp> powerUps; // 道具列表
     private ArrayList<Explosion> explosions;
     private Earth earth; // 地球對象
@@ -24,7 +23,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
     private int score = 0; // 分數
     private int level = 1; // 關卡
     private int health = 500; // 玩家生命值（初始500，與顯示一致）
-    private int earthHealth = 500; // 地球生命值（初始500，與顯示一致）
+    private int earthHealth = 300; // 地球生命值（初始300，與顯示一致）
     private int laserCount = 1; // 初始一發雷射
     private boolean running = true;
     private boolean isShooting = false; // 追蹤是否正在射擊
@@ -33,11 +32,12 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
     private long powerUpEndTime = 0; 
     private long lastBossAttackTime = 0; // 上次 BOSS 攻擊時間
     private final long shootCooldown = 200; // 射擊冷卻時間（毫秒）
-    private final long bossAttackCooldown = 5000; // BOSS 攻擊冷卻時間
-    private final long enemyLaserCooldown = 500; //    敵人光束冷卻時間（縮短為 500 毫秒）
+    private final long bossAttackCooldown = 1000; // BOSS 攻擊冷卻時間
+    private final long enemyLaserCooldown = 500; // 敵人光束冷卻時間（縮短為 500 毫秒）
     private int playerWidth, playerHeight; // 玩家飛船圖片的寬高
     private boolean hasSpawnedFirstWave = false; // 追蹤第一波敵人是否已生成
     private boolean hasSpawnedSecondWave = false; // 追蹤第二波敵人是否已生成
+    private boolean hasSpawnedThirdWave = false; // 追蹤第三波敵人是否已生成
     private Random random = new Random();
     private StarWarsGame gameFrame; // 引用主框架
     private Clip backgroundMusicClip; // 背景音樂
@@ -50,6 +50,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         attackingEnemies = new ArrayList<>();
         lasers = new ArrayList<>();
         enemyLasers = new ArrayList<>();
+        bossLasers = new ArrayList<>(); // 初始化 BOSS 雷射列表
         powerUps = new ArrayList<>();
         explosions = new ArrayList<>();
         playerImage = new ImageIcon(getClass().getResource("/星際大戰/player.jpg")).getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
@@ -104,8 +105,23 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
             g.fillRect(laser.x, laser.y, 4, 10);
         }
 
+        // 繪製 BOSS 超強雷射（較粗的紅色光束）
+        g.setColor(Color.BLUE);
+        for (BossLaser bossLaser : bossLasers) {
+            g.fillRect(bossLaser.x - bossLaser.width / 2, bossLaser.y, bossLaser.width, bossLaser.height);
+        }
+
         for (PowerUp pu : powerUps) {
             pu.draw(g, this);
+        }
+
+        for (int i = explosions.size() - 1; i >= 0; i--) {
+            Explosion explosion = explosions.get(i);
+            if (explosion.isExpired()) {
+                explosions.remove(i);
+            } else {
+                explosion.draw(g, this);
+            }
         }
 
         g.setColor(Color.WHITE);
@@ -135,9 +151,9 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         g.setColor(Color.GRAY);
         g.fillRect(earthHealthBarX, earthHealthBarY, earthHealthBarWidth, earthHealthBarHeight);
         g.setColor(Color.BLUE);
-        g.fillRect(earthHealthBarX, earthHealthBarY, (int)(earthHealthBarWidth * (earthHealth / 500.0)), earthHealthBarHeight);
+        g.fillRect(earthHealthBarX, earthHealthBarY, (int)(earthHealthBarWidth * (earthHealth / 300.0)), earthHealthBarHeight);
         g.setColor(Color.WHITE);
-        g.drawString("Earth HP: " + earthHealth + "/500", earthHealthBarX, earthHealthBarY - 5);
+        g.drawString("Earth HP: " + earthHealth + "/300", earthHealthBarX, earthHealthBarY - 5);
 
         if (boss != null) {
             int bossHealthBarWidth = 300;
@@ -147,18 +163,9 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
             g.setColor(Color.GRAY);
             g.fillRect(bossHealthBarX, bossHealthBarY, bossHealthBarWidth, bossHealthBarHeight);
             g.setColor(Color.RED);
-            g.fillRect(bossHealthBarX, bossHealthBarY, (int)(bossHealthBarWidth * (boss.health / 1000.0)), bossHealthBarHeight);
+            g.fillRect(bossHealthBarX, bossHealthBarY, (int)(bossHealthBarWidth * (boss.health / 2000.0)), bossHealthBarHeight);
             g.setColor(Color.WHITE);
-            g.drawString("BOSS HP: " + boss.health + "/1000", bossHealthBarX, bossHealthBarY - 5);
-        }
-        for (int i = explosions.size() - 1; i >= 0; i--) {
-             Explosion explosion = explosions.get(i);
-             if (explosion.isExpired()) {
-                 explosions.remove(i);
-             } 
-             else {
-                 explosion.draw(g, this);
-             }
+            g.drawString("BOSS HP: " + boss.health + "/2000", bossHealthBarX, bossHealthBarY - 5);
         }
     }
 
@@ -168,7 +175,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
             if (score >= 500 && level < 3) {
                 level = 3;
                 boss = new Boss(getWidth() / 2, 50, "/星際大戰/boss.jpg", 200, 200);
-                boss.health = 1000;
+                boss.health = 2000;
                 if (!hasSpawnedFirstWave) {
                     spawnEnemyWave(7, 3);
                     hasSpawnedFirstWave = true;
@@ -200,7 +207,7 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                         Math.abs(enemy.y - playerY) < (enemy.height + playerHeight) / 2) {
                         health -= 10;
                         enemies.remove(i);
-                        explosions.add(new Explosion(enemy.x + (enemy.width / 4), enemy.y + (enemy.height / 4) , "/星際大戰/explosive.jpg"));
+                        explosions.add(new Explosion(enemy.x + (enemy.width / 4), enemy.y + (enemy.height / 4), "/星際大戰/explosive.jpg"));
                         if (health <= 0) {
                             running = false;
                         }
@@ -209,6 +216,8 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                         double distance = Math.sqrt(Math.pow(enemy.x - earth.getCollisionX(), 2) + Math.pow(enemy.y - earth.getCollisionY(), 2));
                         if (enemy.y <= earth.getY() && distance <= earth.getRadius() + enemy.height / 2) {
                             earthHealth -= 10;
+                            explosions.add(new Explosion(enemy.x, enemy.y, "/星際大戰/explosive.jpg")); // 敵機撞地球時添加爆炸特效
+                            playShootSound("/星際大戰/shooted.wav"); // 播放爆炸音效
                             enemies.remove(i);
                             if (earthHealth <= 0) {
                                 running = false;
@@ -241,13 +250,23 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                         running = false;
                     }
                 }
+                if (earth != null) {
+                    double earthDistance = Math.sqrt(Math.pow(enemy.x - earth.getCollisionX(), 2) + Math.pow(enemy.y - earth.getCollisionY(), 2));
+                    if (enemy.y <= earth.getY() && earthDistance <= earth.getRadius() + enemy.height / 2) {
+                        earthHealth -= 10;
+                        explosions.add(new Explosion(enemy.x, enemy.y, "/星際大戰/explosive.jpg")); // 攻擊型敵機撞地球時添加爆炸特效
+                        playShootSound("/星際大戰/shooted.wav"); // 播放爆炸音效
+                        attackingEnemies.remove(i);
+                        if (earthHealth <= 0) {
+                            running = false;
+                        }
+                    }
+                }
                 if (enemy.lastShootTime >= enemyLaserCooldown) {
                     enemyLasers.add(new Laser(enemy.x, enemy.y + enemy.height / 2));
                     enemy.lastShootTime = 0;
                 }
             }
-            
-
 
             for (int i = enemyLasers.size() - 1; i >= 0; i--) {
                 Laser laser = enemyLasers.get(i);
@@ -266,20 +285,49 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
                 }
             }
 
+            // BOSS 超強雷射邏輯
             if (boss != null) {
                 boss.x += boss.direction * 2;
                 if (boss.x <= boss.width / 2 || boss.x >= getWidth() - boss.width / 2) {
                     boss.direction *= -1;
                 }
                 if (System.currentTimeMillis() - lastBossAttackTime >= bossAttackCooldown) {
-                    health -= 20;
+                    // 發射超強雷射
+                    bossLasers.add(new BossLaser(boss.x, boss.y + boss.height / 2));
                     lastBossAttackTime = System.currentTimeMillis();
                     if (Math.random() < 0.4) enemies.add(new Enemy((int) (Math.random() * getWidth()), 0, "/星際大戰/enemy1.jpg", 40, 40));
                     if (Math.random() < 0.5) attackingEnemies.add(new Enemy((int) (Math.random() * getWidth()), 0, "/星際大戰/enemy2.jpg", 40, 40));
                 }
-                if (boss.health <= 500 && !hasSpawnedSecondWave) {
+                // 三波敵人觸發
+                if (boss.health <= 1500 && !hasSpawnedFirstWave) {
+                    spawnEnemyWave(7, 3);
+                    hasSpawnedFirstWave = true;
+                } else if (boss.health <= 1000 && !hasSpawnedSecondWave) {
                     spawnEnemyWave(10, 5);
                     hasSpawnedSecondWave = true;
+                } else if (boss.health <= 500 && !hasSpawnedThirdWave) {
+                    spawnEnemyWave(15, 7);
+                    hasSpawnedThirdWave = true;
+                }
+            }
+
+            // 更新 BOSS 超強雷射位置並檢查碰撞
+            for (int i = bossLasers.size() - 1; i >= 0; i--) {
+                BossLaser bossLaser = bossLasers.get(i);
+                bossLaser.y += 7; // 超強雷射向下移動
+                if (bossLaser.y > getHeight()) {
+                    bossLasers.remove(i);
+                    continue;
+                }
+                // 檢查是否擊中玩家
+                if (Math.abs(bossLaser.x - playerX) < (playerWidth + bossLaser.width) / 2 &&
+                    Math.abs(bossLaser.y - playerY) < (playerHeight + bossLaser.height) / 2) {
+                    health -= 20; // 超強雷射傷害更高
+                    playShootSound("/星際大戰/shooted.wav"); // 播放敵人爆炸音效
+                    bossLasers.remove(i);
+                    if (health <= 0) {
+                        running = false;
+                    }
                 }
             }
 
@@ -384,12 +432,12 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
             JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
             if (earthHealth <= 0 || health <= 0) {
                 topFrame.setContentPane(new GameOverPanel(score, true, name -> {
-                    gameFrame.addScore(name, score, false); // 失敗，isGameComplete = false
+                    gameFrame.addScore(name, score, false);
                     gameFrame.showGameCoverPanel();
                 }));
             } else if (boss == null && level == 3) {
                 topFrame.setContentPane(new GameCompletePanel(score, name -> {
-                    gameFrame.addScore(name, score, true); // 通關，isGameComplete = true
+                    gameFrame.addScore(name, score, true);
                     gameFrame.showGameCoverPanel();
                 }));
             }
@@ -407,28 +455,25 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
     }
 
     private void playShootSound(String soundFileName) {
-       try {
-           AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource(soundFileName));
-           Clip clip = AudioSystem.getClip();
-           clip.open(audioInputStream);
-           clip.start();
-       } 
-       catch (Exception e) {
-           e.printStackTrace();
-       }
+        try {
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource(soundFileName));
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioInputStream);
+            clip.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void switchToBossMusic() {
         try {
-            // 停止背景音樂
             if (backgroundMusicClip != null && backgroundMusicClip.isRunning()) {
                 backgroundMusicClip.stop();
             }
-            // 播放 BOSS 音樂
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(getClass().getResource("/星際大戰/bossMusic.wav"));
             bossMusicClip = AudioSystem.getClip();
             bossMusicClip.open(audioStream);
-            bossMusicClip.loop(Clip.LOOP_CONTINUOUSLY); // 循環播放
+            bossMusicClip.loop(Clip.LOOP_CONTINUOUSLY);
             bossMusicClip.start();
             System.out.println("Boss music loaded and playing.");
         } catch (Exception e) {
