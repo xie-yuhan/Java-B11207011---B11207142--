@@ -7,9 +7,13 @@ import java.util.ArrayList;
 import java.util.Random;
 import javax.sound.sampled.*;
 
+/**
+ * 遊戲主畫面，負責遊戲邏輯、渲染和玩家互動。
+ * 實現滑鼠控制、敵人生成、碰撞檢測及音效播放，提供完整的射擊遊戲體驗。
+ */
 public class GamePanel extends JPanel implements MouseMotionListener, MouseListener, Runnable {
     private int playerX = 400, playerY = 400; // 玩家飛船位置（中心點，向上調整）
-    private Image playerImage;
+    private Image playerImage; // 玩家飛船圖片
     private Image backgroundImage; // 星空背景圖片
     private ArrayList<Enemy> enemies; // 普通敵人列表
     private ArrayList<Enemy> attackingEnemies; // 攻擊玩家敵人列表
@@ -17,32 +21,38 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
     private ArrayList<Laser> enemyLasers; // 敵人光束列表
     private ArrayList<BossLaser> bossLasers; // BOSS 超強雷射列表
     private ArrayList<PowerUp> powerUps; // 道具列表
-    private ArrayList<Explosion> explosions;
+    private ArrayList<Explosion> explosions; // 爆炸特效列表
     private Earth earth; // 地球對象
     private Boss boss; // BOSS 對象
-    private int score = 0; // 分數
-    private int level = 1; // 關卡
-    private int health = 500; // 玩家生命值（初始500，與顯示一致）
-    private int earthHealth = 300; // 地球生命值（初始300，與顯示一致）
-    private int laserCount = 1; // 初始一發雷射
-    private boolean running = true;
+    private int score = 0; // 玩家分數
+    private int level = 1; // 當前關卡
+    private int health = 500; // 玩家生命值（初始 500）
+    private int earthHealth = 300; // 地球生命值（初始 300）
+    private int laserCount = 1; // 玩家雷射數量（初始 1）
+    private boolean running = true; // 遊戲是否運行
     private boolean isShooting = false; // 追蹤是否正在射擊
     private boolean poweredUp = false; // 檢查是否獲得道具強化
     private long lastShootTime = 0; // 上次射擊的時間
-    private long powerUpEndTime = 0; 
+    private long powerUpEndTime = 0; // 道具強化結束時間
     private long lastBossAttackTime = 0; // 上次 BOSS 攻擊時間
     private final long shootCooldown = 200; // 射擊冷卻時間（毫秒）
-    private final long bossAttackCooldown = 1000; // BOSS 攻擊冷卻時間
-    private final long enemyLaserCooldown = 500; // 敵人光束冷卻時間（縮短為 500 毫秒）
+    private final long bossAttackCooldown = 1000; // BOSS 攻擊冷卻時間（毫秒）
+    private final long enemyLaserCooldown = 500; // 敵人光束冷卻時間（毫秒）
     private int playerWidth, playerHeight; // 玩家飛船圖片的寬高
     private boolean hasSpawnedFirstWave = false; // 追蹤第一波敵人是否已生成
     private boolean hasSpawnedSecondWave = false; // 追蹤第二波敵人是否已生成
     private boolean hasSpawnedThirdWave = false; // 追蹤第三波敵人是否已生成
-    private Random random = new Random();
+    private Random random = new Random(); // 隨機數生成器
     private StarWarsGame gameFrame; // 引用主框架
     private Clip backgroundMusicClip; // 背景音樂
     private Clip bossMusicClip; // BOSS 音樂
 
+    /**
+     * 構造新的遊戲主畫面。
+     *
+     * @param gameFrame 主遊戲框架
+     * @param backgroundMusicClip 背景音樂剪輯
+     */
     public GamePanel(StarWarsGame gameFrame, Clip backgroundMusicClip) {
         this.gameFrame = gameFrame;
         this.backgroundMusicClip = backgroundMusicClip;
@@ -66,6 +76,12 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         new Thread(this).start(); // 啟動遊戲主循環
     }
 
+    /**
+     * 覆寫 paintComponent 方法，繪製遊戲畫面。
+     * 包括背景、地球、玩家、敵人、雷射、道具、爆炸特效及生命條。
+     *
+     * @param g Graphics 物件，用於繪圖
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -169,6 +185,10 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         }
     }
 
+    /**
+     * 實現 Runnable 介面，運行遊戲主循環。
+     * 處理關卡進展、敵人生成、碰撞檢測、道具效果及遊戲結束邏輯。
+     */
     @Override
     public void run() {
         while (running) {
@@ -445,6 +465,12 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         });
     }
 
+    /**
+     * 生成指定數量的敵人波。
+     *
+     * @param normalCount 普通敵人數量
+     * @param attackingCount 攻擊型敵人數量
+     */
     private void spawnEnemyWave(int normalCount, int attackingCount) {
         for (int i = 0; i < normalCount; i++) {
             enemies.add(new Enemy((int) (Math.random() * getWidth()), 0, "/星際大戰/enemy1.jpg", 40, 40));
@@ -454,6 +480,11 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         }
     }
 
+    /**
+     * 播放指定音效檔案。
+     *
+     * @param soundFileName 音效檔案資源路徑
+     */
     private void playShootSound(String soundFileName) {
         try {
             AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource(soundFileName));
@@ -465,6 +496,10 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         }
     }
 
+    /**
+     * 切換到 BOSS 戰鬥音樂。
+     * 停止背景音樂並播放 /星際大戰/bossMusic.wav，失敗時輸出錯誤訊息。
+     */
     private void switchToBossMusic() {
         try {
             if (backgroundMusicClip != null && backgroundMusicClip.isRunning()) {
@@ -481,6 +516,10 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         }
     }
 
+    /**
+     * 停止所有音樂播放。
+     * 關閉背景音樂和 BOSS 音樂剪輯。
+     */
     private void stopAllMusic() {
         if (backgroundMusicClip != null && backgroundMusicClip.isRunning()) {
             backgroundMusicClip.stop();
@@ -492,16 +531,34 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         }
     }
 
+    /**
+     * 實現 MouseMotionListener 介面，處理滑鼠移動事件。
+     * 更新玩家飛船位置。
+     *
+     * @param e 滑鼠事件物件
+     */
     @Override
     public void mouseMoved(MouseEvent e) {
         updatePlayerPosition(e.getX(), e.getY());
     }
 
+    /**
+     * 實現 MouseMotionListener 介面，處理滑鼠拖動事件。
+     * 更新玩家飛船位置。
+     *
+     * @param e 滑鼠事件物件
+     */
     @Override
     public void mouseDragged(MouseEvent e) {
         updatePlayerPosition(e.getX(), e.getY());
     }
 
+    /**
+     * 更新玩家飛船位置，根據滑鼠座標並限制邊界。
+     *
+     * @param mouseX 滑鼠 x 座標
+     * @param mouseY 滑鼠 y 座標
+     */
     private void updatePlayerPosition(int mouseX, int mouseY) {
         playerX = mouseX;
         playerY = mouseY;
@@ -511,6 +568,12 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         if (playerY > getHeight() - playerHeight / 2) playerY = getHeight() - playerHeight / 2;
     }
 
+    /**
+     * 實現 MouseListener 介面，處理滑鼠按下事件。
+     * 當左鍵按下時開始射擊。
+     *
+     * @param e 滑鼠事件物件
+     */
     @Override
     public void mousePressed(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
@@ -518,6 +581,12 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         }
     }
 
+    /**
+     * 實現 MouseListener 介面，處理滑鼠釋放事件。
+     * 當左鍵釋放時停止射擊。
+     *
+     * @param e 滑鼠事件物件
+     */
     @Override
     public void mouseReleased(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
@@ -525,10 +594,27 @@ public class GamePanel extends JPanel implements MouseMotionListener, MouseListe
         }
     }
 
+    /**
+     * 實現 MouseListener 介面，處理滑鼠點擊事件（未使用）。
+     *
+     * @param e 滑鼠事件物件
+     */
     @Override
     public void mouseClicked(MouseEvent e) {}
+
+    /**
+     * 實現 MouseListener 介面，處理滑鼠進入事件（未使用）。
+     *
+     * @param e 滑鼠事件物件
+     */
     @Override
     public void mouseEntered(MouseEvent e) {}
+
+    /**
+     * 實現 MouseListener 介面，處理滑鼠離開事件（未使用）。
+     *
+     * @param e 滑鼠事件物件
+     */
     @Override
     public void mouseExited(MouseEvent e) {}
 }

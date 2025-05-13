@@ -3,9 +3,20 @@ package 星際大戰;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * 遊戲的封面畫面，顯示標題與功能按鈕。
+ * 提供開始遊戲、查看排行榜與調整音量的入口。
+ */
 public class GameCoverPanel extends JPanel {
     private Image backgroundImage;
 
+    /**
+     * 構造新的遊戲封面畫面。
+     *
+     * @param onStartGame 開始遊戲的回調函數
+     * @param onShowLeaderboard 顯示排行榜的回調函數
+     * @param onShowVolume 顯示音量調整畫面的回調函數
+     */
     public GameCoverPanel(Runnable onStartGame, Runnable onShowLeaderboard, Runnable onShowVolume) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         backgroundImage = new ImageIcon(getClass().getResource("/星際大戰/gamecover.jpg")).getImage();
@@ -41,6 +52,11 @@ public class GameCoverPanel extends JPanel {
         add(Box.createVerticalGlue());
     }
 
+    /**
+     * 覆寫 paintComponent 方法，繪製背景圖片。
+     *
+     * @param g Graphics 物件，用於繪圖
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);

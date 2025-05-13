@@ -7,11 +7,21 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.File;
 
+/**
+ * 音量調整畫面，允許玩家調整背景音樂音量並保存設置。
+ * 提供滑塊調整音量並返回主選單的功能。
+ */
 public class VolumePanel extends JPanel {
-    private static float volume = 1.0f; // 0.0 ~ 1.0
-    private JSlider volumeSlider;
-    private Image backgroundImage;
+    private static float volume = 1.0f; // 音量值，範圍 0.0 ~ 1.0
+    private JSlider volumeSlider; // 音量調整滑塊
+    private Image backgroundImage; // 背景圖片
 
+    /**
+     * 構造新的音量調整畫面。
+     *
+     * @param onBack 返回主選單的回調函數
+     * @param game 主遊戲框架，用於設定音量
+     */
     public VolumePanel(Runnable onBack, StarWarsGame game) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         
@@ -52,6 +62,12 @@ public class VolumePanel extends JPanel {
         add(backButton);
     }
 
+    /**
+     * 覆寫 paintComponent 方法，繪製背景圖片。
+     * 背景圖片會填滿整個面板。
+     *
+     * @param g Graphics 物件，用於繪圖
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -62,15 +78,28 @@ public class VolumePanel extends JPanel {
         }
     }
 
+    /**
+     * 獲取當前音量值。
+     *
+     * @return 音量值，範圍 0.0 到 1.0
+     */
     public static float getVolume() {
         return volume;
     }
 
+    /**
+     * 設定音量值。
+     *
+     * @param v 音量值，範圍 0.0 到 1.0
+     */
     public static void setVolume(float v) {
         volume = v;
     }
     
-    // 將 saveVolume 設為靜態方法
+    /**
+     * 儲存音量設置到檔案。
+     * 將音量值以整數形式（0~100）寫入 volume.dat。
+     */
     public static void saveVolume() {
         try (FileOutputStream fos = new FileOutputStream("volume.dat")) {
             fos.write((int) (volume * 100));
@@ -79,7 +108,10 @@ public class VolumePanel extends JPanel {
         }
     }
 
-    // 將 loadVolume 設為靜態方法
+    /**
+     * 從檔案載入音量設置。
+     * 從 volume.dat 讀取整數值（0~100）並轉換為浮點音量值。
+     */
     public static void loadVolume() {
         File file = new File("volume.dat");
         if (file.exists()) {

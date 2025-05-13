@@ -4,11 +4,22 @@ import javax.swing.*;
 import java.awt.*;
 import javax.sound.sampled.*; // 導入音效相關類別
 
+/**
+ * 遊戲結束畫面，顯示失敗訊息、分數並允許玩家輸入名稱提交。
+ * 該面板在地球被摧毀時顯示，並播放失敗音效。
+ */
 public class GameOverPanel extends JPanel {
-    private int finalScore;
-    private Image backgroundImage;
-    private java.util.function.Consumer<String> onSubmit; // 使用 Consumer<String> 接受名稱
+    private int finalScore; // 玩家最終獲得的分數
+    private Image backgroundImage; // 遊戲結束的背景圖片
+    private java.util.function.Consumer<String> onSubmit; // 使用 Consumer<String> 接受名稱提交回調
 
+    /**
+     * 構造新的遊戲結束畫面。
+     *
+     * @param score 玩家最終獲得的分數
+     * @param earthDestroyed 是否地球被摧毀的標誌，決定顯示的訊息
+     * @param onSubmit 提交名稱後的回調函數，接受玩家輸入的名稱
+     */
     public GameOverPanel(int score, boolean earthDestroyed, java.util.function.Consumer<String> onSubmit) {
         this.finalScore = score;
         this.onSubmit = onSubmit;
@@ -55,6 +66,10 @@ public class GameOverPanel extends JPanel {
         playGameOverSound();
     }
 
+    /**
+     * 播放遊戲結束音效。
+     * 嘗試從資源路徑載入並播放 /星際大戰/gameOver.wav，若失敗則輸出錯誤訊息。
+     */
     private void playGameOverSound() {
         try {
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(getClass().getResource("/星際大戰/gameOver.wav"));
@@ -66,6 +81,11 @@ public class GameOverPanel extends JPanel {
         }
     }
 
+    /**
+     * 覆寫 paintComponent 方法，繪製背景圖片。
+     *
+     * @param g Graphics 物件，用於繪圖
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);

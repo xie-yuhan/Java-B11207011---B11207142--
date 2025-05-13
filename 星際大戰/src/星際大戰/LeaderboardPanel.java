@@ -4,7 +4,17 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 
+/**
+ * 排行榜畫面，顯示前 10 名玩家的分數和狀態。
+ * 提供返回主選單的功能。
+ */
 public class LeaderboardPanel extends JPanel {
+    /**
+     * 構造新的排行榜畫面。
+     *
+     * @param onBack 返回主選單的回調函數
+     * @param leaderboard 排行榜資料，包含玩家的分數和通關狀態
+     */
     public LeaderboardPanel(Runnable onBack, ArrayList<StarWarsGame.ScoreEntry> leaderboard) {
         setLayout(new BorderLayout());
         setBackground(Color.BLACK);

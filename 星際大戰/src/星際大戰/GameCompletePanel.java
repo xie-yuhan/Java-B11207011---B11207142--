@@ -4,10 +4,20 @@ import javax.swing.*;
 import java.awt.*;
 import javax.sound.sampled.*; // 導入音效相關類別
 
+/**
+ * 遊戲通關畫面，顯示勝利訊息、分數並允許玩家輸入名稱提交。
+ * 該面板包含音效播放功能，並在提交後觸發回調。
+ */
 public class GameCompletePanel extends JPanel {
-    private int score;
-    private java.util.function.Consumer<String> onSubmit; // 使用 Consumer<String> 接受名稱
+    private int score; // 玩家獲得的分數
+    private java.util.function.Consumer<String> onSubmit; // 使用 Consumer<String> 接受名稱提交回調
 
+    /**
+     * 構造新的遊戲通關畫面。
+     *
+     * @param score 玩家獲得的分數
+     * @param onSubmit 提交名稱後的回調函數，接受玩家輸入的名稱
+     */
     public GameCompletePanel(int score, java.util.function.Consumer<String> onSubmit) {
         this.score = score;
         this.onSubmit = onSubmit;
@@ -50,6 +60,10 @@ public class GameCompletePanel extends JPanel {
         playVictorySound();
     }
 
+    /**
+     * 播放勝利音效。
+     * 嘗試從資源路徑載入並播放 /星際大戰/victory.wav，若失敗則輸出錯誤訊息。
+     */
     private void playVictorySound() {
         try {
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(getClass().getResource("/星際大戰/victory.wav"));
@@ -61,6 +75,11 @@ public class GameCompletePanel extends JPanel {
         }
     }
 
+    /**
+     * 覆寫 paintComponent 方法，填充黑色背景。
+     *
+     * @param g Graphics 物件，用於繪圖
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
