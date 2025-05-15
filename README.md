@@ -216,7 +216,7 @@ classDiagram
     GamePanel ..> Laser
     GamePanel ..> PowerUp
     GamePanel ..> Timer
-    
+```    
     
 ## 三、流程圖 (Flow Chart)
 ```mermaid
@@ -244,6 +244,7 @@ flowchart TD
     N[MouseEvent 左右移動或發射] --> D
     Q --> R[等待遊戲啟動]
     R --> A
+```
 
 ## 四、序列圖 (Sequence Diagram)
 
@@ -280,4 +281,4 @@ sequenceDiagram
     GameOverPanel->>GamePanel:Play again
     GameCompletePanel->>LeaderboardPanel:紀錄排名
     Player->>Thread:MousePressed()
-    
+```    
