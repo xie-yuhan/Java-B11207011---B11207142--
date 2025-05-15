@@ -102,3 +102,182 @@
 - Game Over 或通關後顯示相應畫面，支援重新開始或返回主選單。
 
 ---
+## 二、UML 類別圖 (Class Diagram)
+
+```mermaid
+classDiagram
+    class StarWarsGame{
+        +main()
+        +StartGame()
+    }
+    class GamePanel {
+        - int playerX
+        - int playerY
+        - ArrayList<Enemy> enemies
+        - ArrayList<Enemy> attackingEnemies
+        - ArrayList<Laser> lasers
+        - ArrayList<Laser> enemyLasers
+        - ArrayList<PowerUp> powerUps
+        - ArrayList<Explosion> explosions
+        - Earth earth
+        - int score
+        - int health
+        - int earthhealth
+        - Timer timer
+        - ...
+        + GamePanel()
+        + void paintComponent(Graphics g)
+        + void actionPerformed(ActionEvent e)
+        + void mouseMoved(MouseEvent e)
+        + void mouseDragged(MouseEvent e)
+        + void mousePressed(MouseEvent e)
+        + void mouseReleased(MouseEvent e)
+        + static void main(String[] args)
+        + run()
+    }
+    class GameCoverPanel{
+        + Runnable OnStartGame
+        + Runnable onShowLeaderboard
+        + Runnable onShowVolume
+        - draw()
+    }
+    class GameOverPanel{
+        + int score
+        + boolean earthDestroyed
+        + java.util.function.Consumer<String> onSubmit
+        - draw()
+    }
+    class GameCompletePanel{
+        + int score
+        + java.util.function.Consumer<String> onSubmit
+        - draw()
+    }
+    class VolumePanel{
+        - float volume
+        - JSlider volumeSlider
+        + Runnable onBack
+        + StarWarsGame game
+        - draw()
+    }
+    class LeaderboardPanel{
+        + Runnable onBack
+        + ArrayList<StarWarsGame.ScoreEntry> leaderboard
+        
+    }
+    class Earth{
+        - int x
+        - int y
+        - collisionX
+        - collisionY
+        - radius
+        - image
+        + draw()
+    }
+    class Enemy{
+        - int x
+        - int y
+        - image
+        + Enemies
+        + attackEnemies
+        - draw() 
+    }
+    class Laser{
+        - int x
+        - int y
+        + Lasers
+        + enemiesLasers
+        - draw()
+    }
+    class PowerUp{
+        - int x
+        - int y
+        - image
+        + powerUps
+        - draw()
+    }
+    class Timer{
+        - Thread
+    }
+    class Explosive{
+        - int x
+        - int y
+        - long startTime
+        - static final int DURATION
+        - image
+    }
+    StarWarsGame ..> GameCoverPanel
+    GameCoverPanel ..> GamePanel
+    GamePanel ..> GameOverPanel
+    GamePanel ..> GameCompletePanel
+    GamePanel ..> VolumePanel
+    GamePanel ..> LeaderboardPanel
+    GamePanel ..> Earth
+    GamePanel ..> Enemy
+    GamePanel ..> Laser
+    GamePanel ..> PowerUp
+    GamePanel ..> Timer
+    
+    
+## 三、流程圖 (Flow Chart)
+```mermaid
+flowchart TD
+    A[程式啟動] --> B[創建 StarWarsGame 並顯示 GameCoverPanel]
+    B --> C[初始化 GamePanel:載入圖片、創建列表、啟動 Thread]
+    C --> D[Thread 運行主循環]
+    D --> E[進入主迴圈 Timer 16ms]
+
+    subgraph LOOP
+        E --> F[更新雷射位置]
+        F --> G[更新敵人位置]
+        G --> H[雷射、敵人、道具的碰撞檢測]
+        H --> I[移除命中 & 累計分數]
+        I --> J[擊敗Boss]
+        I --> K[未擊敗Boss]
+        K --> L[呼叫 repaint]
+        J --> O[初始化GameCompletePanel以覆蓋GamePanel]
+        O --> P[重新開始]
+        P --> E
+        O --> Q[離開遊戲]
+        L --> M[paintComponent 繪製畫面]
+        M --> E
+    end
+    N[MouseEvent 左右移動或發射] --> D
+    Q --> R[等待遊戲啟動]
+    R --> A
+
+## 四、序列圖 (Sequence Diagram)
+
+```mermaid
+sequenceDiagram
+    participant Player
+    participant StarWarsGame
+    participant SwingUtilities
+    participant Thread
+    participant Timer
+    participant GamePanel
+    participant GameCompletePanel
+    participant GameOverPanel
+    participant LeaderboardPanel
+    participant Graphics
+
+    Player->>StarWarsGame:執行main()
+    StarWarsGame->>SwingUtilities: invokeLater(run)
+    SwingUtilities->>Thread: 執行 run()
+    Thread->>GamePanel: new GamePanel()
+    Thread->>JFrame: 建立並顯示畫面
+    Thread->>Timer: timer.start()
+
+    loop 每 16ms
+        Timer->>GamePanel: actionPerformed()
+        GamePanel->>GamePanel: 更新玩家、雷射、敵人、道具位置
+        GamePanel->>GamePanel: 碰撞檢測 & 分數更新
+        GamePanel->>GamePanel: repaint()
+        GamePanel->>Graphics: paintComponent(g)
+    end
+    
+    GamePanel->>GameCompletePanel:檢測Boss血量
+    GamePanel->>GameOverPanel:檢測Boss血量
+    GameOverPanel->>GamePanel:Play again
+    GameCompletePanel->>LeaderboardPanel:紀錄排名
+    Player->>Thread:MousePressed()
+    
