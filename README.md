@@ -5,12 +5,6 @@
 - 許育銘:Space Invader 基礎功能列表:1、3、8、11、12
 - [報告影片連結]()
 
-## 指令及執行檔說明
-### 下載完整repo後開啟Terminal執行以下指令
-```
-cd (exe資料夾存放路徑)
-java -jar starwars.jar
-```
 
 ## 遊戲說明
 -目標: 玩家控制飛船擊敗敵人累積分數，保護地球並最終擊敗 BOSS 通關，當玩家生命值或地球生命值降至 0，或擊敗 BOSS 時遊戲結束
@@ -32,6 +26,13 @@ java -jar starwars.jar
 ### 2. 操作方式
 - 玩家移動：滑鼠左右
 - 攻擊：滑鼠點擊左鍵射擊
+
+## 指令及執行檔說明
+### 下載完整repo後開啟Terminal執行以下指令
+```
+cd (exe資料夾存放路徑)
+java -jar starwars.jar
+```
 
 ## 一、Space Invader 基礎功能列表
 
