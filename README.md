@@ -3,7 +3,7 @@
 - 分工說明：
 - 謝育翰:Space Invader 基礎功能列表:2、4、5、6、7、9、10
 - 許育銘:Space Invader 基礎功能列表:1、3、8、11、12
-- [報告影片連結]()
+- [報告影片連結](https://www.youtube.com/watch?v=PtsLcZIT9bI)
 
 
 ## 遊戲說明
